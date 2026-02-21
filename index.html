@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Психология Тест</title>
+    <style>
+        body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 0; }
+        .header { position: sticky; top: 0; background: #ffffff; padding: 15px; text-align: center; border-bottom: 2px solid #ddd; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .score { font-size: 20px; font-weight: bold; color: #2ecc71; }
+        .progress { font-size: 14px; color: #7f8c8d; }
+        #quiz-container { max-width: 600px; margin: 20px auto; padding: 10px; }
+        .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .question { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #2c3e50; }
+        .btns { display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 15px; border: 1px solid #dcdde1; border-radius: 8px; background: #fdfdfe; font-size: 15px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        button.correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724; font-weight: bold; }
+        button.wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+        button:disabled { opacity: 1; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="score">Верно: <span id="c_count">0</span> / 119</div>
+    <div class="progress" id="p_text">Вопрос: 0 из 119</div>
+</div>
+
+<div id="quiz-container"></div>
+
+<script>
+const raw = [
+    {q: "Social psychology is mainly concerned with:", a: ["Group-level structures", "Individual behaviour in social situations", "Genetic influences", "Brain structure"], c: 1},
+    {q: "Observing children’s playground behaviour without interfering is:", a: ["Laboratory", "Ethnography", "Naturalistic observation", "Archival"], c: 2},
+    {q: "When an individual relies on mental frameworks (overload):", a: ["Priming", "Schemas", "Heuristics", "Thin-slicing"], c: 1},
+    {q: "A physician diagnosing based on ease of recall (recent cases):", a: ["Status quo", "Anchoring", "Representative", "Availability heuristics"], c: 3},
+    {q: "Rosenthal & Jacobson bloomers study: primary reason for IQ gains?", a: ["Hard work", "Extra tutoring", "Teacher’s expectations", "Innate intelligence"], c: 2},
+    {q: "In correlational research, a correlation of –0.90 means:", a: ["Weak negative", "Strong negative", "No relationship", "Strong positive"], c: 1},
+    {q: "The variable that a researcher MANIPULATES is:", a: ["Dependent", "Independent", "Control", "Random"], c: 1},
+    {q: "“If only I studied harder, I could have passed!” is:", a: ["Anchoring", "Priming", "Counterfactual thinking", "Optimistic bias"], c: 2},
+    {q: "The self-fulfilling prophecy occurs when:", a: ["Beliefs change", "People confirm expectations", "Logic is used", "Emotions override"], c: 1},
+    {q: "A correlation value of +0.80 indicates:", a: ["Strong positive", "Weak negative", "No relationship", "Moderate inverse"], c: 0},
+    {q: "Ali’s quick assumption that a classmate is rude:", a: ["Controlled", "Automatic thinking", "Anchoring", "Counterfactual"], c: 1},
+    {q: "Which is NOT a basic channel of nonverbal communication?", a: ["Facial expression", "Eye contact", "Body posture", "Speaking"], c: 3},
+    {q: "“Encoding” in facial expression means:", a: ["Interpreting", "Suppressing", "Expressing nonverbal behaviours", "Display rules"], c: 2},
+    {q: "Thai lecturer vs American student eye contact:", a: ["Rude student", "Lecturer dislikes", "Culture norms differ", "No value"], c: 2},
+    {q: "Farah thinks a late colleague is irresponsible (traffic):", a: ["Self-serving", "Covariation", "Fundamental Attribution Error", "Consensus"], c: 2},
+    {q: "Student fails, others pass, student forgets everywhere:", a: ["High consensus", "Low consensus, low distinctiveness", "High consistency", "Low consistency"], c: 1},
+    {q: "Assuming attractive person is also kind/intelligent:", a: ["Correspondence", "Self-serving", "Implicit personality theory", "Consistency"], c: 2},
+    {q: "Fundamental Attribution Error tendency:", a: ["Situations", "Failures", "Overestimate personal / underestimate situational", "Situational"], c: 2},
+    {q: "Labeling lecturer unfriendly based on senior comment:", a: ["Controlled", "Schema activation", "Correlational", "Observation"], c: 1},
+    {q: "Priming refers to:", a: ["Rehearsing", "Recent experiences activating schemas", "Memories", "Stereotypes"], c: 1},
+    {q: "Toddler touches red mark in mirror:", a: ["Lack awareness", "Beginning of self-concept", "Social identity", "Interdependent"], c: 1},
+    {q: "Mei connected to her family:", a: ["Independent", "Interdependent self-view", "Verification", "Growth"], c: 1},
+    {q: "Comparing to top students for motivation:", a: ["Downward", "Upward social comparison", "Dissonance", "Tuning"], c: 1},
+    {q: "Joining study group and adopting style:", a: ["Impression", "Social tuning", "Stereotype threat", "Handicapping"], c: 1},
+    {q: "If I feel like stopping, I will take a break:", a: ["Ego depletion", "Implosive", "Implementation intention", "Extrinsic"], c: 2},
+    {q: "Rereading statement until it feels true:", a: ["Mere exposure effect", "Subliminal", "Instrumental", "Classical"], c: 0},
+    {q: "Adopting views due to praise:", a: ["Classical", "Observational", "Instrumental conditioning", "Dissonance"], c: 2},
+    {q: "Graphic images to discourage smoking:", a: ["Positive", "Fear arousal", "Classical", "Peripheral"], c: 1},
+    {q: "Praising one minority student but denying others:", a: ["Stereotype threat", "Tokenism", "Glass ceiling", "Shifting"], c: 1},
+    {q: "Woman CEO in crisis:", a: ["Glass ceiling", "Glass cliff", "Tokenism", "In-group bias"], c: 1},
+    {q: "He’s good for a woman:", a: ["Stereotype threat", "Dissonance", "Shifting standards", "Identity"], c: 2},
+    {q: "Poor math due to gender stereotypes:", a: ["Handicapping", "Stereotype threat", "Comparison", "Implicit"], c: 1},
+    {q: "Emphasizing rebel identity:", a: ["Comparison", "Distinctive identity", "Downward", "Illusory"], c: 1},
+    {q: "All Group X are lazy:", a: ["Discrimination", "Prejudice", "Stereotype", "Schema"], c: 2},
+    {q: "Amir family harmony:", a: ["Lina", "Amir (interdependent)", "Suri", "Hana"], c: 1},
+    {q: "Avoiding presentation due to flaws:", a: ["Introspection", "Awareness", "Avoidance due to negative self-awareness", "Impression"], c: 2},
+    {q: "Attitudes predict behavior when:", a: ["Weak", "Exposure", "Attitude accessibility is high", "Observational"], c: 2},
+    {q: "Reducing dissonance via justifications:", a: ["Behavior", "Attitude", "Adding consonant cognitions", "Trivialization"], c: 2},
+    {q: "Active harm discrimination:", a: ["Ignoring", "Avoiding", "Verbally attacking outgroup", "Hiring one"], c: 2},
+    {q: "Teenager joins group (no reward):", a: ["Classical", "Observational learning", "Handicapping", "Ego"], c: 1},
+    {q: "Triplett research:", a: ["Attitude", "Prejudice", "Social facilitation", "Attribution"], c: 2},
+    {q: "Schema is:", a: ["Mental frameworks", "Guessing", "Reflex", "Innate"], c: 0},
+    {q: "Automatic thinking is:", a: ["Slow", "Accurate", "Logical", "Fast and effortless"], c: 3},
+    {q: "Decoding is:", a: ["Interpreting cues", "Expressing", "Stereotypes", "Conflict"], c: 0},
+    {q: "Halo effect:", a: ["Attractive positive", "Look alike", "Personality", "Accurate"], c: 0},
+    {q: "Consensus is:", a: ["Common across people", "Across time", "Unique", "Internal"], c: 0},
+    {q: "Interdependent common in:", a: ["Western", "Individualistic", "Collectivistic", "Capitalistic"], c: 2},
+    {q: "Overjustification:", a: ["Rewards reduce intrinsic motivation", "Praise", "Overanalyze", "Easy"], c: 0},
+    {q: "Attitudes consist of:", a: ["Behavior", "Thoughts, feelings, behaviors", "Emotions", "Beliefs"], c: 1},
+    {q: "Mere exposure increases liking:", a: ["Logic", "Familiarity comfort", "Culture", "Load"], c: 1},
+    {q: "Dissonance is:", a: ["Shortcuts", "Inconsistency", "Thinking", "Biased"], c: 1},
+    {q: "Prejudice is:", a: ["Behavior", "Belief", "Negative attitude", "Instinct"], c: 2},
+    {q: "Stereotypes are:", a: ["Emotions", "Schemas", "Behaviors", "Reflexes"], c: 1},
+    {q: "Propinquity effect:", a: ["Opposites", "Social media", "Distance", "Closeness increases liking"], c: 3},
+    {q: "Companionate love:", a: ["Arousal", "Fear", "Deep affection intimacy", "Temporary"], c: 2},
+    {q: "Discrimination is:", a: ["Negative behavior", "Categorization", "Positive", "Norm"], c: 0},
+    {q: "Conformity:", a: ["Opposite", "Change due to group pressure", "Private", "Alone"], c: 1},
+    {q: "Compliance involves:", a: ["Indirect", "Direct request", "Unintentional", "Contagion"], c: 1},
+    {q: "Empathy-altruism helps because:", a: ["Rewards", "Pressure", "Genuinely care", "Dominate"], c: 2},
+    {q: "Bystander effect:", a: ["Fear", "Diffusion of responsibility", "Overconfidence", "Skill"], c: 1},
+    {q: "Aggression is:", a: ["Intentional harm", "Accidental", "Emotional", "Schema"], c: 0},
+    {q: "Asch study:", a: ["Informational", "Normative influence", "Loafing", "Deindividuation"], c: 1},
+    {q: "Frustration-aggression:", a: ["Sadness", "Sometimes aggression", "No connection", "Genetic"], c: 1},
+    {q: "Media violence:", a: ["Cooperation", "Fear", "IQ", "Aggressive cognition"], c: 3},
+    {q: "Social facilitation performance:", a: ["Difficult", "Large", "Dominant response correct", "Deindividuation"], c: 2},
+    {q: "Groupthink:", a: ["Debate", "Harmony overrides realistic decisions", "Minority", "Conflict"], c: 1},
+    {q: "Everyone does it habit:", a: ["Descriptive norm", "Private", "Moral", "Dissonance"], c: 0},
+    {q: "NOT component of empathy:", a: ["Concern", "Emotional", "Accuracy", "Sympathetic egoism"], c: 3},
+    {q: "Evaluation apprehension:", a: ["Loafing", "Private", "Dissonance", "Matches attitude only when not evaluated"], c: 3},
+    {q: "Informational influence copying:", a: ["Rejection", "Ambiguous task copying", "Punishment", "Pressure"], c: 1},
+    {q: "Rural helping:", a: ["Reduces overload", "Urban kinder", "Money", "Urban discourages"], c: 0},
+    {q: "Girls naturally kind:", a: ["Implicit", "Discrimination", "Gender stereotype", "Sexism"], c: 2},
+    {q: "Compliance via liking:", a: ["Scarcity", "Commitment", "Praise/Liking", "Reciprocity"], c: 2},
+    {q: "Less effort group task:", a: ["Facilitation", "Social loafing", "Groupthink", "Cohesion"], c: 1},
+    {q: "Foot-in-the-door:", a: ["Reciprocity", "Commitment and consistency", "Scarcity", "Fear"], c: 1},
+    {q: "Narcissists aggress:", a: ["Calm", "Empathetic", "Low", "Ego threatened"], c: 3},
+    {q: "Injunctive norm:", a: ["Most cheat", "Should not cheat", "Late", "Skip"], c: 1},
+    {q: "Compare when:", a: ["Information unavailable", "Confident", "No interest", "Isolated"], c: 0},
+    {q: "Reciprocity survival:", a: ["Like", "Increases survival", "Emotions", "Demand"], c: 1},
+    {q: "Social exchange help:", a: ["Costs > Benefits", "Benefits > Costs", "Threatened", "Forced"], c: 1},
+    {q: "Visible name tag:", a: ["Contagion", "Conformity", "Deindividuation", "Symbolic"], c: 2},
+    {q: "High entitativity:", a: ["Strangers", "Friends shared goals", "Anonymous", "Coworkers"], c: 1},
+    {q: "NOT reduce aggression:", a: ["Empathy", "Humor", "Distraction", "Alcohol"], c: 3},
+    {q: "Group polarization:", a: ["Hide", "Extreme", "Shared arguments strengthen", "Cohesion"], c: 2},
+    {q: "Parents approve:", a: ["Normative", "Symbolic social influence", "Informational", "Consistency"], c: 1},
+    {q: "Deindividuation anonymity:", a: ["Accountability", "Anonymity", "Evaluation", "Small"], c: 1},
+    {q: "Prosocial models:", a: ["Darkness", "Exclusion", "Prosocial role models", "Crowding"], c: 2},
+    {q: "Men help more:", a: ["Caregiving", "Nurturing", "Physical risk", "Relative"], c: 2},
+    {q: "Negative feedback:", a: ["Dissonance", "Aggression", "Empathy", "Trust"], c: 1},
+    {q: "Preoccupied attachment:", a: ["Secure", "Preoccupied", "Dismissing", "Fearful"], c: 1},
+    {q: "Dislike intensifies:", a: ["Initial dislike strong", "Repeated", "Unpredictable", "Attraction"], c: 0},
+    {q: "Dissonance decision:", a: ["Trivial", "Familiar", "Decision important", "Weak"], c: 2},
+    {q: "Social validation donating:", a: ["Private", "Donating because others do", "Handicapping", "Dissonance"], c: 1},
+    {q: "Social loafing identifiable:", a: ["Individual effort identifiable", "Large", "Boring", "Diffused"], c: 0},
+    {q: "Happy people success:", a: ["Anger", "Indifference", "Positive feelings", "Anxiety"], c: 2},
+    {q: "Groupthink outside opinions:", a: ["Isolating", "Directive", "Outside opinions", "Punishing"], c: 2},
+    {q: "Heat arousal:", a: ["Mood", "Arousal irritability up", "Social", "Inhibition"], c: 1},
+    {q: "Team silent flawed:", a: ["Polarization", "Deindividuation", "Groupthink", "Loafing"], c: 2},
+    {q: "Associated affect friend:", a: ["Laugh harder beside friend", "Direct", "Priming", "Perception"], c: 0},
+    {q: "Pluralistic smoke:", a: ["Calm smoke looking", "Informational", "Descriptive", "Normative"], c: 0},
+    {q: "Watched poor performance:", a: ["Apprehension", "Incorrect dominant response", "Loafing", "Cohesion"], c: 1},
+    {q: "Dissonance justifications:", a: ["Trivialization", "Adding consonant cognitions", "Change", "Handicapping"], c: 1},
+    {q: "Self-fulfilling boys:", a: ["Threat", "Self-fulfilling prophecy", "Hostile", "Implicit"], c: 1},
+    {q: "Group symptoms agree:", a: ["Power", "Exchange", "Equity", "Groupthink symptoms"], c: 3},
+    {q: "Charity video:", a: ["Peripheral route", "Central", "Fear", "Normative"], c: 0},
+    {q: "Victim aggression student:", a: ["Self-serving", "Dissonance", "Learned", "Victim-precipitated"], c: 3},
+    {q: "Rahim witness:", a: ["No diffusion", "Fear", "Pure", "Egoistic"], c: 0},
+    {q: "Friends cheer:", a: ["Normative influence", "Loafing", "Helper", "Informational"], c: 0},
+    {q: "Scarcity two left:", a: ["Reciprocity", "Only two left", "Commitment", "Validation"], c: 1},
+    {q: "Upward excel:", a: ["Downward", "Classmates excel", "Deindividuation", "Superiority"], c: 1},
+    {q: "Siti ignores:", a: ["Siti ignores harassment", "Contagion", "Priming", "Overload"], c: 0},
+    {q: "Transformational leader:", a: ["Authoritarian", "Transactional", "Laissez-faire", "Transformational"], c: 3},
+    {q: "Competitive Rashid:", a: ["Personality", "Rashid donates publicly", "Empathy", "Relief"], c: 1},
+    {q: "Rumors indirect:", a: ["Direct", "Spreading rumors", "Reactive", "Instrumental"], c: 1},
+    {q: "Informational evidence:", a: ["Changes via scientific evidence", "Normative", "Validation", "Symbolic"], c: 0},
+    {q: "Sabotage instrumental:", a: ["Hostile", "Sabotages work", "Compassionate", "Indirect"], c: 1},
+    {q: "Minimizing open:", a: ["Polarization", "Minimizing groupthink", "Conflict", "Loafing"], c: 1},
+    {q: "Stress comparison:", a: ["Exchange", "Psycho", "Socio", "Social comparison"], c: 3},
+    {q: "Hitting pillow copy:", a: ["Catharsis", "Social learning", "Drive", "Empathy"], c: 1},
+    {q: "Happy tutor:", a: ["Positive mood", "Negative", "Obligation", "Informational"], c: 0},
+    {q: "Stranger joy:", a: ["Altruism", "Relief", "Instrumental", "Empathic joy hypothesis"], c: 3},
+    {q: "Outsider hostile:", a: ["Social identity threat", "Polarization", "Frustration", "Discrepancy"], c: 0},
+    {q: "Self-efficacy entrepreneur:", a: ["Locus", "Self-efficacy", "Identity", "Compassion"], c: 1},
+    {q: "Refusal modeling:", a: ["Disobedient modeling", "Conditioning", "Groupthink", "Conformity"], c: 0},
+    {q: "Masks deindividuation:", a: ["Deindividuation", "Entitativity", "Failure", "Reactance"], c: 0},
+    {q: "Rina empathy:", a: ["Concern", "Emotional empathy", "Accuracy", "Load"], c: 1},
+    {q: "Pool transactive:", a: ["Loafing", "Transactive memory", "Normative", "Contagion"], c: 1}
+];
+
+let c_scr = 0, a_scr = 0;
+const cont = document.getElementById('quiz-container');
+
+function shuf(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+function start() {
+    shuf(raw);
+    raw.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `<div class="question">${i+1}. ${item.q}</div>
+            <div class="btns">
+                ${item.a.map((o, idx) => `<button onclick="ans(${idx},${item.c},this)">${o}</button>`).join('')}
+            </div>`;
+        cont.appendChild(div);
+    });
+}
+
+window.ans = (sel, cor, btn) => {
+    const bs = btn.parentElement.querySelectorAll('button');
+    bs.forEach(b => b.disabled = true);
+    if(sel === cor) {
+        btn.classList.add('correct');
+        c_scr++;
+    } else {
+        btn.classList.add('wrong');
+        bs[cor].classList.add('correct');
+    }
+    a_scr++;
+    document.getElementById('c_count').innerText = c_scr;
+    document.getElementById('p_text').innerText = "Вопрос: " + a_scr + " из 119";
+};
+
+start();
+</script>
+</body>
+</html>
